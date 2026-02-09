@@ -3,6 +3,7 @@ import { Download, RefreshCw } from 'lucide-react';
 import gsap from 'gsap';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import bgMusic from '../assets/Happy w u.mp3';
 
 const ScrollMessage = ({ onRestart }) => {
   const [displayText, setDisplayText] = useState('');
@@ -10,8 +11,25 @@ const ScrollMessage = ({ onRestart }) => {
 
   const containerRef = useRef(null);
   const parchmentRef = useRef(null);
+  const audioRef = useRef(null);
 
   useEffect(() => {
+    // Audio initialization
+    audioRef.current = new Audio(bgMusic);
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0.5;
+
+    // Play with error handling (browsers often require interaction, which we have from the Blossom button)
+    const playAudio = async () => {
+      try {
+        await audioRef.current.play();
+      } catch (err) {
+        console.log("Audio playback delayed or blocked", err);
+      }
+    };
+
+    playAudio();
+
     // Entrance animation
     gsap.fromTo(parchmentRef.current,
       { y: 50, opacity: 0 },
@@ -32,7 +50,13 @@ const ScrollMessage = ({ onRestart }) => {
       if (i > message.length) clearInterval(interval);
     }, 40);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
   }, []);
 
   const saveAsPDF = async () => {
